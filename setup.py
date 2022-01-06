@@ -9,7 +9,7 @@ setup(
         "psutil",
         "pyyaml",
         "pandas",
-        "sklearn>=1.0.0",
+        "sklearn",
         "pydotplus",
         "lightgbm",
         "dataclasses",
