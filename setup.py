@@ -22,6 +22,7 @@ setup(
         "doit",
         "psycopg",
         "toml",
+        "types-PyYAML",
     ],
     python_requires=">=3.9",
 )
