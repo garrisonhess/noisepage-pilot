@@ -12,7 +12,6 @@ setup(
         "sklearn",
         "pydotplus",
         "lightgbm",
-        "dataclasses",
         "isort",
         "black",
         "flake8",
