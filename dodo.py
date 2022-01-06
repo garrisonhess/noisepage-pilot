@@ -448,7 +448,7 @@ def task_ci_python():
             *[f"black --check --verbose {folder}" for folder in folders],
             *[f"isort --check {folder}" for folder in folders],
             *[f"flake8 --statistics {folder}" for folder in folders],
-            *[f"mypy --verbose {folder}" for folder in typed_folders],
+            *[f"mypy {folder}" for folder in typed_folders],
             *[f"pylint --verbose {folder}" for folder in typed_folders],
         ],
         "verbosity": VERBOSITY_DEFAULT,
