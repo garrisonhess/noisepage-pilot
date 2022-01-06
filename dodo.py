@@ -412,6 +412,28 @@ def _build_benchbase() -> None:
     os.chdir(root)
 
 
+
+def task_lint():
+    """
+    Run formatting and linting locally
+    """
+    folders = ["action", "forecast", "pilot", "behavior"]
+    typed_folders = ["behavior"]
+
+    return {
+        "actions": [
+            "black dodo.py setup.py",
+            *[f"black {folder}" for folder in folders],
+            *[f"isort {folder}" for folder in folders],
+            *[f"flake8 {folder}" for folder in folders],
+            *[f"mypy {folder}" for folder in typed_folders],
+            *[f"pylint {folder}" for folder in typed_folders],
+        ],
+        "verbosity": VERBOSITY_DEFAULT,
+        "uptodate": [False],
+    }
+
+
 def task_ci_python():
     """
     CI: this should be run and all warnings fixed before pushing commits.
@@ -422,7 +444,7 @@ def task_ci_python():
     return {
         "actions": [
             "black dodo.py setup.py",
-            *[f"black {folder}" for folder in folders],
+            *[f"black --check --verbose {folder}" for folder in folders],
             *[f"isort {folder}" for folder in folders],
             *[f"flake8 {folder}" for folder in folders],
             *[f"mypy {folder}" for folder in typed_folders],

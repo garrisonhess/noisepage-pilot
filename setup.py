@@ -23,6 +23,7 @@ setup(
         "psycopg",
         "toml",
         "types-PyYAML",
+        "tqdm",
     ],
     python_requires=">=3.9",
 )
