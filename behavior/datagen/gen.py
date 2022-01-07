@@ -1,5 +1,6 @@
 # allow plumbum FG statements
 # pylint: disable=pointless-statement
+from __future__ import annotations
 
 import logging
 import os
@@ -251,7 +252,7 @@ def exec_benchbase(
                 f.write(plans_result)
 
         # Move benchbase results to experiment results directory
-        shutil.move(benchbase_snapshot_dir / "results", benchbase_results_dir)
+        shutil.move(str(benchbase_snapshot_dir / "results"), benchbase_results_dir)
         time.sleep(10)  # Allow TScout Collector to finish getting results
     except (KeyboardInterrupt, FileNotFoundError, ProcessExecutionError) as err:
         cleanup(err, terminate=True, message="Error running Benchbase")
