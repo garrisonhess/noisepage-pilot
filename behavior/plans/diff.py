@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import sys
@@ -10,7 +11,6 @@ import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
 from pandas import DataFrame, Index
-from tqdm import tqdm
 
 from behavior import (
     BASE_TARGET_COLS,
@@ -107,8 +107,10 @@ def load_tscout_data(tscout_data_dir: Path) -> tuple[dict[str, DataFrame], DataF
         result_path = tscout_data_dir / f"Exec{node_name}.csv"
 
         if not result_path.exists():
-            print(
-                f"result doesn't exist for ou_name: {node_name}, should be at path: {result_path}"
+            logging.error(
+                "result doesn't exist for ou_name: %s, should be at path: %s",
+                node_name,
+                result_path,
             )
             sys.exit(1)
 
@@ -143,7 +145,7 @@ def load_tscout_data(tscout_data_dir: Path) -> tuple[dict[str, DataFrame], DataF
         if df.shape[0] > 0:
             df.to_csv(f"{diff_data_dir}/LOG_{ou_name}_filtered.csv")
         else:
-            print("no data for OU after filtering")
+            logging.warning("OU: %s has no data after filtering", ou_name)
 
     return ou_to_df, unified
 
@@ -294,20 +296,10 @@ def diff_one_invocation(invocation: DataFrame) -> dict[str, NDArray[np.float64]]
         diffed_costs: NDArray[np.float64] = parent_row[DIFF_COLS].values
 
         for child_id in child_ids:
-
-            try:
-                child_costs: NDArray[np.float64] = invocation.loc[child_id][
-                    DIFF_COLS
-                ].values
-                diffed_costs -= child_costs
-            # TODO(Garrison): change this exception variant
-            except Exception as err:  # pylint: disable=broad-except
-                print(err)
-                print(child_costs)
-                print(f"child costshape: {child_costs.shape}")
-                print(diffed_costs)
-                print(f"diffed_costs shape: {diffed_costs.shape}")
-                sys.exit(1)
+            child_costs: NDArray[np.float64] = invocation.loc[child_id][
+                DIFF_COLS
+            ].values
+            diffed_costs -= child_costs
 
         rid_to_diffed_costs[parent_rid] = diffed_costs
 
@@ -319,11 +311,11 @@ def diff_all_plans(diff_data_dir: Path, unified: DataFrame) -> DataFrame:
     all_query_ids: set[str] = set(pd.unique(unified["query_id"]))
     records: list[list[Any]] = []
 
-    print(f"Num query_ids: {len(all_query_ids)}")
+    logging.info("Num query_ids: %s", len(all_query_ids))
 
     unified.to_csv(diff_data_dir / "LOG_final_unified_before_diffing.csv")
 
-    for query_id in tqdm(all_query_ids):
+    for query_id in all_query_ids:
         query_invocations = unified.loc[query_id]
         node_ids: pd.Series = query_invocations["plan_node_id"]
         if isinstance(query_invocations, pd.Series):
@@ -343,7 +335,9 @@ def diff_all_plans(diff_data_dir: Path, unified: DataFrame) -> DataFrame:
             pd.unique(query_invocations["query_invocation_id"])
         )
 
-        print(f"Query ID: {query_id}, Num invocations: {len(query_invocation_ids)}")
+        logging.info(
+            "Query ID: %s, Num invocations: %s", query_id, len(query_invocation_ids)
+        )
         indexed_invocations = query_invocations.set_index(
             "query_invocation_id", drop=False, inplace=False
         )
@@ -381,7 +375,7 @@ def save_results(
 
         # find the intersection of RIDs between diffed_cols and each df
         rids_to_update = df.index.intersection(diffed_cols.index)
-        print(f"num records to update: {rids_to_update.shape[0]}")
+        logging.info("Num records to update: %s", rids_to_update.shape[0])
 
         if rids_to_update.shape[0] > 0:
             diffed_df = df.join(diffed_cols.loc[rids_to_update], how="inner")
@@ -392,7 +386,7 @@ def save_results(
 
 def main(experiment: str) -> None:
 
-    print(f"Differencing experiment: {experiment}")
+    logging.info("Differencing experiment: %s", experiment)
 
     for mode in ["train", "eval"]:
         experiment_root: Path = BEHAVIOR_DATA_DIR / mode / experiment
@@ -403,7 +397,7 @@ def main(experiment: str) -> None:
         ]
 
         for bench_name in bench_names:
-            print(f"Mode: {mode} | Benchmark: {bench_name}")
+            logging.info("Mode: %s | Benchmark: %s", mode, bench_name)
             bench_root = experiment_root / bench_name
             tscout_data_dir = bench_root / "tscout"
             diff_data_dir: Path = bench_root / "differenced"
