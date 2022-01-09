@@ -17,7 +17,7 @@ RUN apt install -y openjdk-17-jdk unzip
 # Create a non-sudo user and switch to them.
 # This is because PostgreSQL binaries don't like being
 # run as root, e.g., initdb.
-RUN useradd --create-home --shell /bin/bash --home-dir /home/terrier --password "$(openssl passwd -1 ubuntu)" -G sudo terrier 
+RUN useradd --create-home --shell /bin/bash --home-dir /home/terrier --password "$(openssl passwd -1 terrier)" -G sudo terrier 
 USER terrier
 WORKDIR /home/terrier/
 RUN echo "PATH=${PATH}:/home/terrier/.local/bin" >> /home/terrier/.bashrc
