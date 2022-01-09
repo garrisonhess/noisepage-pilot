@@ -115,6 +115,8 @@ Wan and Garrison are working on the API for this.
 
 ## References
 
+See [^mb2] for more details.
+
 [^mb2]: MB2: Decomposed Behavior Modeling for Self-Driving Database Management Systems
 
     ```
