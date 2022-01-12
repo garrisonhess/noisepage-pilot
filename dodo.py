@@ -481,7 +481,7 @@ def task_ci_python():
     """
     CI: this should be run and all warnings fixed before pushing commits.
     """
-    folders = ["action", "behavior", "forecast", "pilot"]
+    folders = ["action", "behavior", "forecast", "pilot", "test"]
 
     return {
         "actions": [
