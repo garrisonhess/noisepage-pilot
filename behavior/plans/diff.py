@@ -363,6 +363,8 @@ def save_results(diff_data_dir: Path, ou_to_df: dict[str, DataFrame], diffed_col
             diffed_df.to_csv(f"{diff_data_dir}/{ou_name}.csv", index=True)
         else:
             diffed_df = df
+            diff_target_cols = [f"diffed_{col}" for col in BASE_TARGET_COLS]
+            diffed_df[diff_target_cols] = diffed_df[BASE_TARGET_COLS]
 
 
 def main(data_dir, output_dir, experiment: str) -> None:
