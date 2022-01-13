@@ -107,7 +107,7 @@ def load_data(data_dir: Path) -> dict[str, DataFrame]:
 
 
 def prep_train_data(
-    ou_name: str, df: DataFrame, feat_diff: bool, target_diff: bool
+    ou_name: str, df: DataFrame, feat_diff: bool
 ) -> tuple[list[str], list[str], NDArray[Any], NDArray[Any]]:
 
     # logging.error("INITIAL COLUMNS: %s, DF SHAPE: %s", df.columns, df.shape)
@@ -128,6 +128,7 @@ def prep_train_data(
     cols_to_remove = [col for col in cols_to_remove if col in df.columns]
     df = df.drop(cols_to_remove, axis=1).sort_index(axis=1)
 
+    # TODO(Garrison): Re-enable this in a way that doesn't remove everything in degenerate cases.
     # for col in df.columns:
     #     if df[col].nunique() == 1 and col not in diff_targ_cols + BASE_TARGET_COLS:
     #         logging.info(
@@ -154,12 +155,8 @@ def prep_train_data(
 
     if not feat_cols:
         logging.warning("All features were constant.  Defaulting to a single constant bias column.")
-        logging.warning("BEFORE FEAT COLS: %s, df cols: %s", feat_cols, df.columns)
         df["bias"] = 1
         feat_cols = ["bias"]
-        logging.warning("AFTER FEAT COLS: %s, df cols: %s", feat_cols, df.columns)
-
-    logging.info("Using features: %s", feat_cols)
 
     X = df[feat_cols].values
     y = df[target_cols].values
@@ -194,7 +191,6 @@ def main(config_file, dir_data_train, dir_data_eval, dir_output) -> None:
     eval_bench_dbs = config["eval_bench_dbs"]
     eval_bench_db = eval_bench_dbs[0]
     feat_diff = config["features_diff"]
-    target_diff = config["targets_diff"]
 
     for train_bench_db in train_bench_dbs:
         if train_bench_db not in BENCHDB_TO_TABLES:
@@ -226,7 +222,7 @@ def main(config_file, dir_data_train, dir_data_eval, dir_output) -> None:
 
     for ou_name, train_df in train_ou_to_df.items():
         logging.info("Begin Training OU: %s", ou_name)
-        feat_cols, target_cols, x_train, y_train = prep_train_data(ou_name, train_df, feat_diff, target_diff)
+        feat_cols, target_cols, x_train, y_train = prep_train_data(ou_name, train_df, feat_diff)
 
         if x_train.shape[1] == 0 or y_train.shape[1] == 0:
             logging.warning(feat_cols)

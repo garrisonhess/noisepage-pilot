@@ -15,13 +15,7 @@ from numpy.typing import NDArray
 from pandas import DataFrame
 from plumbum import cli
 
-from behavior import (
-    BASE_TARGET_COLS,
-    BENCHDB_TO_TABLES,
-    DIFF_COLS,
-    LEAF_NODES,
-    PLAN_NODE_NAMES,
-)
+from behavior import BASE_TARGET_COLS, BENCHDB_TO_TABLES, DIFF_COLS, PLAN_NODE_NAMES
 
 COMMON_SCHEMA: list[str] = [
     "statement_id",
@@ -93,7 +87,7 @@ def infer_query_plans(query_to_plan_node_counts, logdir):
 
         for (node_id, count) in node_id_to_count.items():
             if count < (0.01 * max_count):
-                logging.warning(
+                logger.warning(
                     "Truncating potentially broken plan.  Query_id: %s | Truncation Node Id: %s | Node Id to Count: %s",
                     query_id,
                     truncation_node_id,
@@ -120,7 +114,7 @@ def infer_query_plans(query_to_plan_node_counts, logdir):
         for query_id, plan_node_id_to_counts in inferred_plan_node_counts.items()
     }
 
-    logging.info("Inferred query plans: %s", inferred_query_plans.items())
+    logger.info("Inferred query plans: %s", inferred_query_plans.items())
     assert isinstance(inferred_query_plans, dict)
     return inferred_query_plans
 
@@ -152,7 +146,7 @@ def resolve_query_plans(unified, logdir):
         required_plan_node_ids = set(range(len(plan_node_ids)))
 
         if plan_node_ids != required_plan_node_ids:
-            logging.warning("Found incomplete query plan: %s for query_id %s", plan_node_ids, query_id)
+            logger.warning("Found incomplete query plan: %s for query_id %s", plan_node_ids, query_id)
             incomplete_query_ids.append(query_id)
 
     # Log incomplete query identifiers.
@@ -350,9 +344,6 @@ def save_results(diff_data_dir: Path, ou_to_df: dict[str, DataFrame], diffed_col
     # add the new columns onto the tscout dataframes
     for ou_name, df in ou_to_df.items():
         df.drop(["ou_name", "rid"], axis=1, inplace=True)
-        if ou_name in LEAF_NODES:
-            df.to_csv(f"{diff_data_dir}/{ou_name}.csv", index=True)
-            continue
 
         # find the intersection of RIDs between diffed_cols and each df
         rids_to_update = df.index.intersection(diffed_cols.index)
@@ -360,11 +351,12 @@ def save_results(diff_data_dir: Path, ou_to_df: dict[str, DataFrame], diffed_col
 
         if rids_to_update.shape[0] > 0:
             diffed_df = df.join(diffed_cols.loc[rids_to_update], how="inner")
-            diffed_df.to_csv(f"{diff_data_dir}/{ou_name}.csv", index=True)
         else:
             diffed_df = df
             diff_target_cols = [f"diffed_{col}" for col in BASE_TARGET_COLS]
             diffed_df[diff_target_cols] = diffed_df[BASE_TARGET_COLS]
+
+        diffed_df.to_csv(f"{diff_data_dir}/{ou_name}.csv", index=True)
 
 
 def main(data_dir, output_dir, experiment: str) -> None:
